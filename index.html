@@ -125,29 +125,57 @@ async function registerWithSupabase(e){
   }
 }
 
-async function loginWithSupabase(e){
+async function loginWithSupabase(e) {
   e.preventDefault();
-  const button=e.submitter;
-  if(button){button.disabled=true;button.textContent="Connexion…";}
-  try {
-    const {data,error}=await supabaseClient.auth.signInWithPassword({
-      email:$("lemail").value.trim(),
-      password:$("lpassword").value
-    });
-    if(error) throw error;
-    const {data:profileData,error:profileError}=await supabaseClient
-      .from("profiles").select("id, role, full_name").eq("id",data.user.id).maybeSingle();
-    if(profileError) throw profileError;
-    toast(profileData ? "Connexion réussie. Bienvenue "+(profileData.full_name || "")+" !" : "Connexion réussie.");
-    go("jobs");
-  } catch(err) {
-    toast("Connexion impossible : "+(err.message || "vérifiez vos identifiants"));
-  } finally {
-    if(button){button.disabled=false;button.textContent="Se connecter";}
-  }
-}
 
-async function signOutFromSupabase(){
+  const button = e.submitter;
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Connexion...";
+  }
+
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: $("lemail").value.trim(),
+      password: $("lpassword").value
+    });
+
+    if (error) throw error;
+
+    if (!data.user) {
+      throw new Error("Utilisateur non connecté.");
+    }
+
+    const { data: profileData, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("id, role, full_name")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error("Erreur du profil :", profileError);
+    }
+
+    toast(
+      "Connexion réussie" +
+      (profileData?.full_name ? ", bienvenue " + profileData.full_name : "") +
+      " !"
+    );
+
+    go("jobs");
+
+  } catch (err) {
+    console.error("Erreur de connexion :", err);
+    toast("Connexion impossible : " + (err.message || "Erreur inconnue"));
+
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Se connecter";
+    }
+  }
+} signOutFromSupabase(){
   const {error}=await supabaseClient.auth.signOut();
   if(error){toast("Déconnexion impossible : "+error.message);return;}
   toast("Vous êtes déconnecté.");
