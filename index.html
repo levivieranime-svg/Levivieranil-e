@@ -175,8 +175,7 @@ async function loginWithSupabase(e) {
       button.textContent = "Se connecter";
     }
   }
-} signOutFromSupabase(){
-  const {error}=await supabaseClient.auth.signOut();
+async function signOutFromSupabase() {  const {error}=await supabaseClient.auth.signOut();
   if(error){toast("Déconnexion impossible : "+error.message);return;}
   toast("Vous êtes déconnecté.");
   go("jobs");
